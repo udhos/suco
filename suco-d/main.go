@@ -9,31 +9,40 @@ import (
 	"github.com/g3n/engine/util/application"
 )
 
+type game struct {
+	*application.Application
+	mydata int
+}
+
 func main() {
+
+	g := game{}
 
 	app, _ := application.Create(application.Options{
 		Title:  "Sun Colony Desktop",
-		Width:  1024,
-		Height: 768,
+		Width:  800,
+		Height: 600,
 	})
+
+	g.Application = app
 
 	// Create a blue torus and add it to the scene
 	geom := geometry.NewTorus(1, .4, 12, 32, math32.Pi*2)
 	mat := material.NewPhong(math32.NewColor("DarkBlue"))
 	torusMesh := graphic.NewMesh(geom, mat)
-	app.Scene().Add(torusMesh)
+	g.Application.Scene().Add(torusMesh)
 
 	// Add lights to the scene
 	ambientLight := light.NewAmbient(&math32.Color{1.0, 1.0, 1.0}, 0.8)
-	app.Scene().Add(ambientLight)
+	g.Application.Scene().Add(ambientLight)
 	pointLight := light.NewPoint(&math32.Color{1, 1, 1}, 5.0)
 	pointLight.SetPosition(1, 0, 2)
-	app.Scene().Add(pointLight)
+	g.Application.Scene().Add(pointLight)
 
 	// Add an axis helper to the scene
 	axis := graphic.NewAxisHelper(0.5)
-	app.Scene().Add(axis)
+	g.Application.Scene().Add(axis)
 
-	app.CameraPersp().SetPosition(0, 0, 3)
-	app.Run()
+	g.Application.CameraPersp().SetPosition(0, 0, 3)
+	g.Application.Run()
 }
