@@ -25,7 +25,7 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	win, err := wmgr.CreateWindow(800, 600, "Hello G3N", false)
+	win, err := wmgr.CreateWindow(800, 600, "Sun Colony Desktop", false)
 	if err != nil {
 		panic(err)
 	}
