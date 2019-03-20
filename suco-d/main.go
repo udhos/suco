@@ -4,6 +4,10 @@ package main
 // https://github.com/g3n/demos/tree/master/hellog3n-no-app
 
 import (
+	"log"
+	"runtime"
+	"time"
+
 	"github.com/g3n/engine/camera"
 	"github.com/g3n/engine/camera/control"
 	"github.com/g3n/engine/core"
@@ -15,7 +19,6 @@ import (
 	"github.com/g3n/engine/math32"
 	"github.com/g3n/engine/renderer"
 	"github.com/g3n/engine/window"
-	"runtime"
 )
 
 func main() {
@@ -71,7 +74,7 @@ func main() {
 	scene.Add(camera)
 
 	// Create a blue torus and add it to the scene
-	geom := geometry.NewTorus(1, .4, 12, 32, math32.Pi*2)
+	geom := geometry.NewTorus(.4, .07, 12, 32, math32.Pi*2)
 	mat := material.NewPhong(math32.NewColor("DarkBlue"))
 	torusMesh := graphic.NewMesh(geom, mat)
 	scene.Add(torusMesh)
@@ -98,8 +101,25 @@ func main() {
 	// Set window background color to gray
 	gs.ClearColor(0.5, 0.5, 0.5, 1.0)
 
+	server := make(chan command)
+	go serverLoop(server) // spawn server handler
+
 	// Render loop
 	for !win.ShouldClose() {
+
+		select {
+		case cmd := <-server:
+			switch cmd.code {
+			case cmdRandomTorus:
+				tm := graphic.NewMesh(geom, mat)
+				tm.SetPosition(p, p, p)
+				p += .2 // next "random" x,y,z
+				scene.Add(tm)
+			default:
+				log.Printf("unknown server command: %d", cmd.code)
+			}
+		default: // prevent render loop from blocking on channel
+		}
 
 		// Render the scene using the specified camera
 		rend.Render(camera)
@@ -107,5 +127,25 @@ func main() {
 		// Update window and check for I/O events
 		win.SwapBuffers()
 		wmgr.PollEvents()
+	}
+}
+
+var p float32 = .2 // "random" x,y,z
+
+const (
+	cmdRandomTorus = iota
+)
+
+type command struct {
+	code int
+}
+
+// serverLoop will fetch commands from server over the network
+func serverLoop(ch chan<- command) {
+	for {
+		time.Sleep(time.Second * 2)
+		ch <- command{code: cmdRandomTorus}
+		time.Sleep(time.Second * 2)
+		ch <- command{code: 999} // expect log errors for this
 	}
 }
